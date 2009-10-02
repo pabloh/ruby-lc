@@ -22,6 +22,10 @@ module CL
 		end
 
 		def method_missing met, *ars, &bl
+				var = @vars[met] ||= Var.new(met) 
+				#Do some stuff...
+				var
+		end
 
 		end
 
