@@ -6,18 +6,31 @@ rescue
 end
 
 module CL
+	class Value
+		attr_reader :value
+		def initialize(val); @value = val ; end
+	end
 
 	class Var
-		attr_accessor :value
-	  def initialize value
-			@value = value
-		end	
+		attr_reader :value, :name
+		def initialize name, value = 0, step = 1
+			@name, @value = name, value, step
+		end
+		
+		def inc
+			@value += @step
+		end
+
+		def << enum
+			#TODO: enum must me Enumerable
+			Iterator.new(self,enum)	
+		end		
 	end
 
 	class Filter
 		BOPRS = [ :<, :> ,:>=, :<=,  :== , :===, :=~  ]
 
-		#TODO: unary operators
+		UOPRS = [ :~@ ]
 	end
 
 	Nat = 0..(1.0/0)
@@ -25,38 +38,48 @@ module CL
 	class CalcExpr
 		BOPRS = [ :+, :- , :* , :/ , :%, :**, :div, :divmod , :mod  ]
 
-		#TODO: unary operators
+		UOPRS = [ :+@, :-@ ]
+
+		FilterError = "Filter is not allowed inside an expresion"
+
+		def to_const arrs
+			arrs.map {|x| x.is_a?(Numeric) ? Value.new(x) : x}
+		end
+	
+		def initialize var1_uopr, opr_uvar, var2 = nil
+			raise ArgumentError.new(FilterError) if Filter === var2
+			@var1, @opr, @var2 =  *to_const(var2 ? [var1_uopr, opr_uvar, var2] : [opr_uvar,var1_uopr])
+		end
+
+		def value
+			@var1.value.send *(@var2.value ? [@opr,@var2.value]: @opr)
+		end
 	end
 	
 	class Iterator
 	
 	end
 
-	[Var, CalcExpr].each do |klass| 
-		CalcExpr::BOPRS.each do |opr| 
+	[CalcExpr, Filter].each do |klass_oper|
+		[Var, klass_oper].each do |klass| 
 			klass.class_eval do
-				define_method(opr) do |param|
-					#TODO: param must be a number or another var/exp
-					CalcExpr.new(self, opr, param)
+				klass_oper::BOPRS.each do |opr| 
+					define_method(opr) do |param|
+						klass_oper.new(self, opr, param)
+					end
 				end
-			end
-		end
-	end
-
-	[Var, Filter].each do |klass| 
-		Filter::BOPRS.each do |opr| 
-			klass.class_eval do
-				define_method(opr) do |param|
-					#TODO: param must be a number or another var/exp/filter
-					Filter.new(self, opr, param)
+				klass_oper::UOPRS.each do |opr| 
+					define_method(opr) do 
+						klass_oper.new(opr,self)
+					end
 				end
 			end
 		end
 	end
 
 	class Evaluator
-		def initialize vars
-			@vars = vars || {}
+		def initialize vars = {}
+			@vars = vars
 		end
 
 		def method_missing met, *ars, &bl
@@ -64,8 +87,11 @@ module CL
 				#Do some stuff...
 				var
 		end
-	end
 
+		def generator_for exp
+
+		end
+	end
 end
 
 def CL &blk
