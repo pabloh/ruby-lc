@@ -5,7 +5,7 @@ rescue
 	Generator = Enumerator
 end
 
-module CL
+module LC
 	class Value
 		attr_reader :value
 		def initialize(val); @value = val ; end
@@ -133,10 +133,10 @@ module CL
 			@vars[met] ||= Var.new(met) 
 		end
 
-		def cl_for arr
+		def lc_for arr
 			expr = arr.shift
 			conds, iters = arr.partition {|c| Filter === c }
-			cond = conds.inject(:&) || CL::True
+			cond = conds.inject(:&) || LC::True
 			Generator.new do |y|
 				calc = lambda { y.yield(expr.value) if cond.value }
 				iters.reverse.inject(calc) {|mem, obj| obj.iter(&mem) }.call
@@ -146,7 +146,7 @@ module CL
 
 end
 
-def CL &blk
-	arr = yield(e = CL::Evaluator.new) 
-	e.cl_for arr
+def LC &blk
+	arr = yield(e = LC::Evaluator.new) 
+	e.lc_for arr
 end
