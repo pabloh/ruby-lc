@@ -10,7 +10,6 @@ module CL
 		attr_reader :value
 		def initialize(val); @value = val ; end
 		def to_s; value.to_s ; end
-		alias next value # agghh!!!!
 	end
 
 	class Var
@@ -29,7 +28,6 @@ module CL
 		end
 
 		def << enum
-			#TODO: enum must me Enumerable
 			Iterator.new(self,enum)	
 		end		
 	end
@@ -40,7 +38,7 @@ module CL
 		UOPRS = [ :~@ ]
 
 		def to_const arrs
-			arrs.map {|x| [TrueClass,FalseClass,Numeric].member?(x.class) ? Value.new(x) : x}
+			arrs.map {|x| [TrueClass,FalseClass,Numeric].detect {|c| c === x} ? Value.new(x) : x}
 		end
 
 		def initialize var1_uopr, opr_uvar, var2 = nil
@@ -63,12 +61,10 @@ module CL
 				@var1.value.send @opr,@var2.value
 			end
 		end
-
-		alias next value
 	end
 
-	True = Filter.new(:~,false)
-	False = Filter.new(:~,true)
+	True = Value.new(true)
+	False = Value.new(false)
 
 	Nat = 0..(1.0/0)
 
@@ -95,8 +91,6 @@ module CL
 		def value
 			@var1.value.send *(@var2.value ? [@opr,@var2.value]: @opr)
 		end
-
-		alias next value
 	end
 	
 	class Iterator
@@ -104,10 +98,8 @@ module CL
 			@var, @enum = var, enum
 		end
 		
-		def iter iter
-			Generator.new do |y|
-				@enum.each {|x| @var.value = x; y.yield(iter.next)  }
-			end
+		def iter
+			lambda { @enum.each {|x| @var.value = x; yield } }
 		end
 
 		def to_s
@@ -145,10 +137,9 @@ module CL
 			expr = arr.shift
 			conds, iters = arr.partition {|c| Filter === c }
 			cond = conds.inject(:&) || CL::True
-			iter = iters.reverse.inject(expr) {|mem, obj| obj.iter(mem) }
-			
 			Generator.new do |y|
-				iter.each {|x| y.yield(x) if cond.value }
+				calc = lambda { y.yield(expr.value) if cond.value }
+				iters.reverse.inject(calc) {|mem, obj| obj.iter(&mem) }.call
 			end
 		end
 	end
