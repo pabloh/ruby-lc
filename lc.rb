@@ -127,7 +127,7 @@ module LC
   end
 
   [[CalcExpr,Var,Value], [Filter,Var,Value,CalcExpr]].each do |klases|
-    klass_open = klases.first
+    klass_oper = klases.first
     klases.each do |klass|
       klass.class_eval do
         klass_oper::BOPRS.each do |opr| 
