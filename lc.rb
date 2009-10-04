@@ -6,7 +6,7 @@ rescue
 end
 
 module LC
-  MultipleVars = false
+  SingleParameter = false
   
   class Value
     attr_reader :value
@@ -29,7 +29,7 @@ module LC
       name.to_s 
     end
 
-    def coerse obj
+    def coerce obj
       [Value.new(obj),self] if Numeric === obj
     end
 
@@ -77,7 +77,9 @@ module LC
   class CalcExpr
     BOPRS = [ :+, :- , :* , :/ , :%, :**, :div, :divmod , :mod  ]
 
-    UOPRS = [ :+@, :-@ ]
+    UOPRS = [ :+@, :-@ ]def coerce obj
+            [Value.new(obj),self] if Numeric === obj
+          e
 
     FilterError = "Filter is not allowed inside an expresion"
 
@@ -100,6 +102,7 @@ module LC
   end
   
   class Iterator
+    #TODO: Only one iterator per variable
     def initialize var, enum
       @var, @enum = var, enum
     end
@@ -114,8 +117,12 @@ module LC
   end
 
   [CalcExpr, Filter].each do |klass_oper|
-    [Var,Value, klass_oper].each do |klass| 
-      klass.class_eval do
+    klass.class_eval do
+      [Var,Value, klass_oper].each do |klass| 
+        def coerce obj
+          [Value.new(obj),self] if Numeric === obj
+        end
+
         klass_oper::BOPRS.each do |opr| 
           define_method(opr) do |param|
             klass_oper.new(self, opr, param)
@@ -154,8 +161,8 @@ end
 
 def LC &blk
   e = LC::Evaluator.new
-  if LC::MultipleVars
-     #TODO: extract variable's name from block parameters
+  unless LC::SingleParameter
+     #TODO: extract variables name from block parameters
     parms = blk.arity.enum_for(:times).zip("a".."zzz").map {|t,v| LC::Var.new v.to_sym }
     arr = yield(*parms)
   else arr = yield(e) 
