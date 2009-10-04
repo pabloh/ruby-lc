@@ -126,9 +126,8 @@ module LC
     end
   end
 
-  [[CalcExpr,Var,Value], [Filter,Var,Value,CalcExpr]].each do |klases|
-    klass_oper = klases.first
-    klases.each do |klass|
+  [[CalcExpr,Var,Value], [Filter,Var,Value,CalcExpr]].each do |klass_oper,*klases|
+    (klases << klass_oper).each do |klass|
       klass.class_eval do
         klass_oper::BOPRS.each do |opr| 
           define_method(opr) do |param|
