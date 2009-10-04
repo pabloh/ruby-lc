@@ -6,6 +6,8 @@ rescue
 end
 
 module LC
+	MultipleVars = false
+	
 	class Value
 		attr_reader :value
 		def initialize(val); @value = val ; end
@@ -147,6 +149,12 @@ module LC
 end
 
 def LC &blk
-	arr = yield(e = LC::Evaluator.new) 
+	e = LC::Evaluator.new
+	if LC::MultipleVars
+ 		#TODO: extract variable's name from block parameters
+		parms = blk.arity.enum_for(:times).zip("a".."zzz").map {|t,v| LC::Var.new v.to_sym }
+		arr = yield(*parms)
+	else arr = yield(e) 
+	end
 	e.lc_for arr
 end
