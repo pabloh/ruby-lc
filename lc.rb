@@ -51,6 +51,10 @@ module LC
       @var1, @opr, @var2 =  *to_const(var2 ? [var1_uopr, opr_uvar, var2] : [opr_uvar,var1_uopr])
     end
 
+    def coerce obj
+      [Value.new(obj),self] if Numeric === obj
+    end
+
     def to_s
       "( " + (@var2 ? @var1.to_s + " " + @opr.to_s + " " + @var2.to_s : @opr.to_s + @var1.to_s ) + " )"
     end
@@ -94,6 +98,10 @@ module LC
       @var1, @opr, @var2 =  *to_const(var2 ? [var1_uopr, opr_uvar, var2] : [opr_uvar,var1_uopr])
     end
 
+    def coerce obj
+      [Value.new(obj),self] if Numeric === obj
+    end
+
     def to_s
       "( " + (@var2 ? @var1.to_s + " " + @opr.to_s + " " + @var2.to_s : @opr.to_s + @var1.to_s ) + " )"
     end
@@ -118,14 +126,10 @@ module LC
     end
   end
 
-  [CalcExpr, Filter].each do |klass_oper|
-    klass_oper.class_eval do
-        def coerce obj
-          [Value.new(obj),self] if Numeric === obj
-        end
-		end
-    [Var,Value, klass_oper].each do |klass| 
-    	klass.class_eval do
+  [[CalcExpr,Var,Value], [Filter,Var,Value,CalcExpr]].each do |klases|
+    klass_open = klases.first
+    klases.each do |klass|
+      klass.class_eval do
         klass_oper::BOPRS.each do |opr| 
           define_method(opr) do |param|
             klass_oper.new(self, opr, param)
