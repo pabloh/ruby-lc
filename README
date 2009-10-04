@@ -1,4 +1,4 @@
-ruby-lc is a lazy comprehension list libray, that tries to ressemble Haskell sintax.
+ruby-lc is a lazy list comprehension libray, that tries to ressemble Haskell sintax.
 
 Rigth now it only works with numbers, (but it may also works with something else that ducktype like a number)
 
