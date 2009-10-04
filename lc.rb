@@ -77,9 +77,11 @@ module LC
   class CalcExpr
     BOPRS = [ :+, :- , :* , :/ , :%, :**, :div, :divmod , :mod  ]
 
-    UOPRS = [ :+@, :-@ ]def coerce obj
-            [Value.new(obj),self] if Numeric === obj
-          e
+    UOPRS = [ :+@, :-@ ]
+    
+    def coerce obj
+      [Value.new(obj),self] if Numeric === obj
+    end
 
     FilterError = "Filter is not allowed inside an expresion"
 
@@ -117,12 +119,13 @@ module LC
   end
 
   [CalcExpr, Filter].each do |klass_oper|
-    klass.class_eval do
-      [Var,Value, klass_oper].each do |klass| 
+    klass_oper.class_eval do
         def coerce obj
           [Value.new(obj),self] if Numeric === obj
         end
-
+		end
+    [Var,Value, klass_oper].each do |klass| 
+    	klass.class_eval do
         klass_oper::BOPRS.each do |opr| 
           define_method(opr) do |param|
             klass_oper.new(self, opr, param)
