@@ -15,9 +15,11 @@ Some examples:
 
 LC {|x,y| [x + y, y << (0..20), x << (1..10), y % 7 == 0, x % 2 == 1  ]}.to_a
 
+
+
 LC {|x| [x, x << LC::Nat, x > 6, (x % 6 == 1) | (x % 6 == 5) ] }.take 100
 
-whichs gives the first 100 natural numbers than are congruent 1 or 5 modulo 6.
+whichs returns the first 100 natural numbers than are congruent 1 or 5 modulo 6.
 
 
 
