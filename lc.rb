@@ -183,8 +183,9 @@ end
 def LC &blk
   e = LC::Evaluator.new
   unless LC::SingleParameter
-     #TODO: extract variables name from block parameter
-    parms = blk.arity.enum_for(:times).zip("a".."zzz").map {|t,v| LC::Var.new v.to_sym }
+    #TODO: extract variables name from block parameter 
+    #parms = blk.arity.enum_for(:times).zip("a".."zzz").map {|t,v| LC::Var.new v.to_sym }
+    parms = blk.arity.enum_for(:times).map { LC::Var.new :unnamed }
     arr = yield(*parms)
   else arr = yield(e) 
   end
