@@ -34,7 +34,7 @@ module LC
       @value += step
     end
 
-    def to_
+    def to_s
       name.to_s 
     end
 
@@ -84,7 +84,7 @@ module LC
     end
 
     def value
-      @var1.value.send @opr,*@var2.value
+      @var1.value.send @opr,@var2.value
     end
   end
 
