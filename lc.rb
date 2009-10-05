@@ -84,7 +84,7 @@ module LC
     end
 
     def value
-      @var1.value.send @opr,@var2.value
+      @var1.value.send @opr,*@var2.value
     end
   end
 
@@ -122,7 +122,7 @@ module LC
     end
 
     def value
-      @var1.value.send *(@var2.value ? [@opr,*@var2.value]: @opr)
+      @var1.value.send *(@var2 ? [@opr,*@var2.value]: @opr)
     end
   end
   
