@@ -7,7 +7,16 @@ end
 
 module LC
   SingleParameter = false
-  
+
+  #Methods and top-level 'functions' calls inside the lc'block
+  def self.func func, *arg
+     met Kernel,func, *arg
+  end
+        
+  def self.met rec, met, *args
+    (met.to_s =~ /\?$/ ? Filter : CalcExpr).new(Value.new(rec),met,*args)
+  end
+
   class Value
     attr_reader :value
     def initialize(val); @value = val ; end
@@ -25,7 +34,7 @@ module LC
       @value += @step
     end
 
-    def to_s
+    def to_
       name.to_s 
     end
 
@@ -39,20 +48,34 @@ module LC
   end
 
   class Filter
-    BOPRS = [ :<, :> ,:>=, :<=,  :== , :===, :=~, :&, :|  ]
+    BOPRS = [ :<, :> ,:>=, :<=, :== , :===, :=~]
 
-    UOPRS = [ :~@ ]
+    UOPRS = [] 
 
-    def to_const arrs
-      arrs.map {|x| [TrueClass,FalseClass,Numeric].detect {|c| c === x} ? Value.new(x) : x}
+    FBOPRS = [:&, :|]
+
+    FBOPRS.each do |met| 
+      define_method met do |param|
+        raise ArgumentError.new(FilterError) if !param.is_a?(Filter) 
+        Filter.new(self, met, param)
+      end
+    end
+
+    def ~@
+      Filter.new(:~, self)
+    end
+
+    def to_const arr
+      arr.map {|x| [TrueClass,FalseClass,Numeric].detect {|c| x.is_a? c} ? Value.new(x) : x}
     end
 
     def initialize var1_uopr, opr_uvar, var2 = nil
       @var1, @opr, @var2 =  *to_const(var2 ? [var1_uopr, opr_uvar, var2] : [opr_uvar,var1_uopr])
+      @orp = :^ if @opr == :~
     end
 
     def coerce obj
-      [Value.new(obj),self] if Numeric === obj
+      [Value.new(obj),self] if [TrueClass,FalseClass,Numeric].detect {|c| obj.is_a? c} 
     end
 
     def to_s
@@ -60,16 +83,7 @@ module LC
     end
 
     def value
-      case @opr
-      when :&
-        @var1.value && @var2.value
-      when :|
-        @var1.value || @var2.value
-      when :~
-        !@var1.value
-      else
-        @var1.value.send @opr,@var2.value
-      end
+      @var1.value.send @opr,*@var2.value
     end
   end
 
@@ -84,13 +98,13 @@ module LC
     UOPRS = [ :+@, :-@ ]
     
     def coerce obj
-      [Value.new(obj),self] if Numeric === obj
+      [Value.new(obj),self] if obj.is_a?(Numeric)
     end
 
     FilterError = "Filter is not allowed inside an expresion"
 
-    def to_const arrs
-      arrs.map {|x| x.is_a?(Numeric) ? Value.new(x) : x}
+    def to_const arr
+      arr.map {|x| x.is_a?(Numeric) ? Value.new(x) : x}
     end
   
     def initialize var1_uopr, opr_uvar, var2 = nil
@@ -102,12 +116,12 @@ module LC
       [Value.new(obj),self] if Numeric === obj
     end
 
-    def to_s
+    def to_
       "( " + (@var2 ? @var1.to_s + " " + @opr.to_s + " " + @var2.to_s : @opr.to_s + @var1.to_s ) + " )"
     end
 
     def value
-      @var1.value.send *(@var2.value ? [@opr,@var2.value]: @opr)
+      @var1.value.send *(@var2.value ? [@opr,*@var2.value]: @opr)
     end
   end
   
@@ -121,8 +135,8 @@ module LC
       lambda { @enum.each {|x| @var.value = x; yield } }
     end
 
-    def to_s
-      @var.to_s + " in " + @enum.to_s
+    def to_
+      @var.to_s + " in " + @enum.to_
     end
   end
 
@@ -168,7 +182,7 @@ end
 def LC &blk
   e = LC::Evaluator.new
   unless LC::SingleParameter
-     #TODO: extract variables name from block parameters
+     #TODO: extract variables name from block parameter
     parms = blk.arity.enum_for(:times).zip("a".."zzz").map {|t,v| LC::Var.new v.to_sym }
     arr = yield(*parms)
   else arr = yield(e) 
