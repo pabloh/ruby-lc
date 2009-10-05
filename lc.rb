@@ -39,7 +39,7 @@ module LC
     end
 
     def coerce obj
-      [Value.new(obj),self] if obj.is_a?(Filter)
+      [Value.new(obj),self] if obj.is_a?(Numeric)
     end
 
     def << enum
