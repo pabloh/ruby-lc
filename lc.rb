@@ -71,7 +71,7 @@ module LC
 
     def initialize var1_uopr, opr_uvar, var2 = nil
       @var1, @opr, @var2 =  *to_const(var2 ? [var1_uopr, opr_uvar, var2] : [opr_uvar,var1_uopr])
-      @orp,@var2 = :^, true if @opr == :~
+      @orp,@var2 = :^, True if @opr == :~
     end
 
     def coerce obj
