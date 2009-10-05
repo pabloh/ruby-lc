@@ -8,7 +8,7 @@ end
 module LC
   SingleParameter = false
 
-  #Methods and top-level 'functions' calls inside the lc'block
+  #Methods and top-level 'functions' calls inside the lc's block
   def self.func func, *arg
      met Kernel,func, *arg
   end
@@ -26,12 +26,12 @@ module LC
   class Var
     attr_accessor :value
     attr_reader :name
-    def initialize name, value = 0, step = 1
-      @name, @value, @step = name, value, step
+    def initialize name, value = 0
+      @name, @value= name, value
     end
 
-    def inc
-      @value += @step
+    def inc step = 1
+      @value += step
     end
 
     def to_
@@ -39,7 +39,7 @@ module LC
     end
 
     def coerce obj
-      [Value.new(obj),self] if Numeric === obj
+      [Value.new(obj),self] if obj.is_a?(Filter)
     end
 
     def << enum
@@ -48,7 +48,7 @@ module LC
   end
 
   class Filter
-    BOPRS = [ :<, :> ,:>=, :<=, :== , :===, :=~]
+    BOPRS = [ :<, :> ,:>=, :<=, :== ]
 
     UOPRS = [] 
 
@@ -56,11 +56,13 @@ module LC
 
     FBOPRS.each do |met| 
       define_method met do |param|
-        raise ArgumentError.new(FilterError) if !param.is_a?(Filter) 
+        raise ArgumentError.new(OperatorError) if !param.is_a?(Filter) 
         Filter.new(self, met, param)
       end
     end
-
+    
+    OperatorError = "'&' and '|' only take boolean expresions as parameters"
+    
     def ~@
       Filter.new(self, :^, True)
     end
@@ -107,12 +109,12 @@ module LC
     end
   
     def initialize var1_uopr, opr_uvar, var2 = nil
-      raise ArgumentError.new(FilterError) if Filter === var2 
+      raise ArgumentError.new(FilterError) if  var2.is_a?(Filter)
       @var1, @opr, @var2 =  *to_const(var2 ? [var1_uopr, opr_uvar, var2] : [opr_uvar,var1_uopr])
     end
 
     def coerce obj
-      [Value.new(obj),self] if Numeric === obj
+      [Value.new(obj),self] if obj.is_a?(Numeric)
     end
 
     def to_
@@ -125,9 +127,9 @@ module LC
   end
   
   class Iterator
-    #TODO: Only one iterator per variable
-    def initialize var, enum
-      @var, @enum = var, enum
+    #TODO: Configure iter's lambda so it can skip values
+    def initialize var, enum, step = 1
+      @var, @enum, @step, @pos = var, enum, step, 0
     end
     
     def iter
@@ -167,7 +169,7 @@ module LC
 
     def lc_for arr
       expr = arr.shift
-      conds, iters = arr.partition {|c| Filter === c }
+      conds, iters = arr.partition {|c| c.is_a?(Filter) }
       cond = conds.inject(:&) || LC::True
       Generator.new do |y|
         calc = lambda { y.yield(expr.value) if cond.value }
