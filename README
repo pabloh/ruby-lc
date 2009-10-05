@@ -25,4 +25,4 @@ LC {|x| [x, x << LC::Nat, x > 6, (x % 6 == 1) | (x % 6 == 5) ] }.take 100
 
 LC {|x| [x ** 2 , x <<  LC::Nat ,x > 100 , LC.func(:prime?, x) ] }.take 10
 
-#the squares of the first 20 primes numbers above 100 (prime? has to be a 'top-level function')
+#the squares of the first 10 primes numbers above 100 (prime? has to be a 'top-level function')
