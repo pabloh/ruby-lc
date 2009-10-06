@@ -2,13 +2,13 @@ ruby-lc is a lazy list comprehension libray, that tries to ressemble Haskell sin
 
 Rigth now it only works with numbers, (but it may also works with something else that ducktype like a number)
 
-For creating a cl just call the CL method with a block, declaring the variables you want to use, as the block's parameters and define the list comprehension expresions inside an Array, like this:
+For creating a comprehension list just call the CL method with a block, declaring the variables you want to use, as the block's parameters and define the list comprehension expressions inside an Array, like this:
 
 CL {|x| [ x , x << (0..10), x % 2 == 0 ]}
 
 The call to CL, returns an Enumerator which can be used to access the comprehension list's values.
 
-The first element in the Array must always be an expresion, the remainder elements may be boolean conditions, or binding variable expresions, with this sintax: <variable> << <Enumerable>, where << pretends to behave like Haskell's <-.
+The first element in the Array must always be an expression, the remainder elements may be boolean conditions, or the variable's binding expressions, with this sintax: <variable> << <Enumerable>, where << pretends to behave like Haskell's <-.
 
   
 Some examples:
